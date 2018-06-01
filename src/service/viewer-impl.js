@@ -245,13 +245,13 @@ export class Viewer {
         this.prerenderSize_;
     dev().fine(TAG_, '- prerenderSize:', this.prerenderSize_);
 
-
     /**
      * Whether the AMP document is embedded in a webview.
      * @private @const {boolean}
      */
     this.isWebviewEmbedded_ = !this.isIframed_ &&
         this.params_['webview'] == '1';
+
 
     /**
      * Whether the AMP document is embedded in a viewer, such as an iframe, or
