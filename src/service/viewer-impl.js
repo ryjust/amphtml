@@ -286,7 +286,7 @@ export class Viewer {
         && (this.params_['origin']
             || this.params_['visibilityState']
             // Parent asked for viewer JS. We must be embedded.
-            || queryParameters['amp_js_v']))
+            || queryParameters['amp_js_v'])
         || this.isWebviewEmbedded_
         || this.isCctEmbedded_
         || !ampdoc.isSingleDoc());
@@ -337,7 +337,7 @@ export class Viewer {
       trustedViewerResolved = false;
       trustedViewerPromise = Promise.resolve(false);
     } else if (
-        this.win.location.ancestorOrigins && !this.isWebviewEmbedded_ &&
+      this.win.location.ancestorOrigins && !this.isWebviewEmbedded_ &&
         !this.isCctEmbedded_) {
       // Ancestors when available take precedence. This is the main API used
       // for this determination. Fallback is only done when this API is not
