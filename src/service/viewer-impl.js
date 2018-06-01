@@ -252,6 +252,21 @@ export class Viewer {
     this.isWebviewEmbedded_ = !this.isIframed_ &&
         this.params_['webview'] == '1';
 
+    const url = parseUrlDeprecated(this.ampdoc.win.location.href);
+    /**
+     * Whether the AMP document was served by a proxy.
+     * @private @const {boolean}
+     */
+    this.isProxyOrigin_ = isProxyOrigin(url);
+
+    const queryParameters = parseQueryString(this.win.location.search);
+    /**
+     * Whether the AMP document is embedded in a Chrome Custom Tab.
+     * @private @const {boolean}
+     */
+    this.isCctEmbedded_ = !this.isIframed_ && this.isProxyOrigin_ &&
+        queryParameters['amp_gsa'] === '1' && queryParameters['amp_js_v'] &&
+        queryParameters['amp_js_v'].startsWith('a');
 
     /**
      * Whether the AMP document is embedded in a viewer, such as an iframe, or
@@ -271,23 +286,10 @@ export class Viewer {
         && (this.params_['origin']
             || this.params_['visibilityState']
             // Parent asked for viewer JS. We must be embedded.
-            || (this.win.location.search.indexOf('amp_js_v') != -1))
+            || queryParameters['amp_js_v']))
         || this.isWebviewEmbedded_
+        || this.isCctEmbedded_
         || !ampdoc.isSingleDoc());
-
-    /**
-     * Whether the AMP document is embedded in a Chrome Custom Tab.
-     * @private @const {boolean}
-     */
-    this.isCctEmbedded_ = !this.isIframed_ &&
-        parseQueryString(this.win.location.search)['amp_gsa'] === '1';
-
-    const url = parseUrlDeprecated(this.ampdoc.win.location.href);
-    /**
-     * Whether the AMP document was served by a proxy.
-     * @private @const {boolean}
-     */
-    this.isProxyOrigin_ = isProxyOrigin(url);
 
     /** @private {boolean} */
     this.hasBeenVisible_ = this.isVisible();
@@ -334,7 +336,9 @@ export class Viewer {
       // Not embedded in IFrame - can't trust the viewer.
       trustedViewerResolved = false;
       trustedViewerPromise = Promise.resolve(false);
-    } else if (this.win.location.ancestorOrigins && !this.isWebviewEmbedded_) {
+    } else if (
+        this.win.location.ancestorOrigins && !this.isWebviewEmbedded_ &&
+        !this.isCctEmbedded_) {
       // Ancestors when available take precedence. This is the main API used
       // for this determination. Fallback is only done when this API is not
       // supported by the browser.
