@@ -245,13 +245,6 @@ export class Viewer {
         this.prerenderSize_;
     dev().fine(TAG_, '- prerenderSize:', this.prerenderSize_);
 
-    /**
-     * Whether the AMP document is embedded in a webview.
-     * @private @const {boolean}
-     */
-    this.isWebviewEmbedded_ = !this.isIframed_ &&
-        this.params_['webview'] == '1';
-
     const url = parseUrlDeprecated(this.ampdoc.win.location.href);
     /**
      * Whether the AMP document was served by a proxy.
@@ -267,6 +260,13 @@ export class Viewer {
     this.isCctEmbedded_ = !this.isIframed_ && this.isProxyOrigin_ &&
         queryParameters['amp_gsa'] === '1' && queryParameters['amp_js_v'] &&
         queryParameters['amp_js_v'].startsWith('a');
+
+    /**
+     * Whether the AMP document is embedded in a webview.
+     * @private @const {boolean}
+     */
+    this.isWebviewEmbedded_ = !this.isIframed_ &&
+        this.params_['webview'] == '1';
 
     /**
      * Whether the AMP document is embedded in a viewer, such as an iframe, or
