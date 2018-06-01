@@ -245,21 +245,6 @@ export class Viewer {
         this.prerenderSize_;
     dev().fine(TAG_, '- prerenderSize:', this.prerenderSize_);
 
-    const url = parseUrlDeprecated(this.ampdoc.win.location.href);
-    /**
-     * Whether the AMP document was served by a proxy.
-     * @private @const {boolean}
-     */
-    this.isProxyOrigin_ = isProxyOrigin(url);
-
-    const queryParameters = parseQueryString(this.win.location.search);
-    /**
-     * Whether the AMP document is embedded in a Chrome Custom Tab.
-     * @private @const {boolean}
-     */
-    this.isCctEmbedded_ = !this.isIframed_ && this.isProxyOrigin_ &&
-        queryParameters['amp_gsa'] === '1' &&
-        (queryParameters['amp_js_v'] || '').startsWith('a');
 
     /**
      * Whether the AMP document is embedded in a webview.
@@ -286,10 +271,25 @@ export class Viewer {
         && (this.params_['origin']
             || this.params_['visibilityState']
             // Parent asked for viewer JS. We must be embedded.
-            || queryParameters['amp_js_v'])
+            || (this.win.location.search.indexOf('amp_js_v') != -1))
         || this.isWebviewEmbedded_
-        || this.isCctEmbedded_
         || !ampdoc.isSingleDoc());
+
+    const url = parseUrlDeprecated(this.ampdoc.win.location.href);
+    /**
+     * Whether the AMP document was served by a proxy.
+     * @private @const {boolean}
+     */
+    this.isProxyOrigin_ = isProxyOrigin(url);
+
+    const queryParameters = parseQueryString(this.win.location.search);
+    /**
+     * Whether the AMP document is embedded in a Chrome Custom Tab.
+     * @private @const {boolean}
+     */
+    this.isCctEmbedded_ = !this.isIframed_ && this.isProxyOrigin_ &&
+        queryParameters['amp_gsa'] === '1' &&
+        (queryParameters['amp_js_v'] || '').startsWith('a');
 
     /** @private {boolean} */
     this.hasBeenVisible_ = this.isVisible();
@@ -304,7 +304,7 @@ export class Viewer {
      * messages. The promise is only available when the document is embedded.
      * @private @const {?Promise}
      */
-    this.messagingReadyPromise_ = this.isEmbedded_ ?
+    this.messagingReadyPromise_ = (this.isEmbedded_ || this.isCctEmbedded_) ?
       Services.timerFor(this.win).timeoutPromise(
           20000,
           new Promise(resolve => {
@@ -321,7 +321,7 @@ export class Viewer {
      * document is embedded.
      * @private @const {?Promise}
      */
-    this.messagingMaybePromise_ = this.isEmbedded_ ?
+    this.messagingMaybePromise_ = (this.isEmbedded_ || this.isCctEmbedded_) ?
       this.messagingReadyPromise_
           .catch(reason => {
             // Don't fail promise, but still report.
@@ -332,7 +332,7 @@ export class Viewer {
     // Trusted viewer and referrer.
     let trustedViewerResolved;
     let trustedViewerPromise;
-    if (!this.isEmbedded_) {
+    if (!this.isEmbedded_ && !this.isCctEmbedded_) {
       // Not embedded in IFrame - can't trust the viewer.
       trustedViewerResolved = false;
       trustedViewerPromise = Promise.resolve(false);
